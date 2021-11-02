@@ -1,103 +1,82 @@
-# TSDX User Guide
+# Introduction
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+The Conveyor SDK is a JavaScript library for developers to seamlessly interact with smart contracts that benefit from MEV protection with Conveyor. 
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
+Long story short, users submit meta-transactions to their contracts by following the three-step process below:
 
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
+1. Instantiate the module and set your Web3 provider
+2. Approve the Forwarder contract to collect fee payment with your choice of ERC20 tokens*. 
+3. Submit a request and provide the necessary parameters.
 
-## Commands
+---
 
-TSDX scaffolds your new library inside `/src`.
+# Specification
 
-To run TSDX, use:
+## Smart Contract
 
-```bash
-npm start # or yarn start
+Implementation smart contracts must inherit the `ConveyorBase` contract. The `ConveyorBase` contract includes the following administrative methods:
+- Toggle Conveyor protection using the `enableConveyorProtection` and `disableConyerProtection` methods.
+- Configure the trusted forwarder address with `setForwarder`.
+- The `onlyConveyor` modifier. Functions with the modifier can only be invoked by none other than the Forwarder contract.
+- To retrieve the sender's address on the implementation contract, you must use the `msgSender()` instead of the default `msg.sender`.
+
+### Source Code:
+- `ConveyorBase`: https://github.com/automata-network/generic-conveyor/blob/unit-testing/contracts/ConveyorBase.sol
+- Example Contract: https://github.com/automata-network/generic-conveyor/blob/unit-testing/contracts/test/Greeter.sol
+
+## SDK
+
+The main module has the following functions built-in:
+- `erc20ApproveForwarder`- Sets an allowance for the Forwarder contract to transfer ERC20 tokens for fee payment.
+- `submitConveyorTransaction` - Constructs the request body to the Geode relayer to interact with contracts that are protected by Conveyor.
+- `submitTransaction` - Submits a regular transaction directly to the target address. This can be used to execute methods that do not have the `onlyConveyor` modifier or to contracts that have disabled Conveyor protection.
+- `fetchConveyorStatus` - detects whether Conveyor protection is enabled for the given target contract.
+- `toggleConveyorProtection` - enables/disables Conveyor protection on the given target contract.
+
+### Source Code
+https://github.com/automata-network/conveyor-sdk
+
+---
+
+# Quick Guide
+
+As mentioned previously, submitting a transaction using Conveyor only requires three steps.
+
+**Step 1: Instantiate the module and set your Web3 provider**
+
+```javascript
+import { Conveyor } from '@conveyor/sdk';
+
+const web3 = window.ethereum; // Metamask
+const conveyor = new Conveyor(web3);
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+**Step 2: Approve the Forwarder contract for collecting fees**
 
-To do a one-off build, use `npm run build` or `yarn build`.
+:warning: *This step must be performed before moving on to the next step. Otherwise, your transaction may fail due to zero allowance*
 
-To run tests, use `npm test` or `yarn test`.
-
-## Configuration
-
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
-
-### Jest
-
-Jest tests are set up to run with `npm test` or `yarn test`.
-
-### Bundle Analysis
-
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
+```javascript
+await erc20ApproveForwarder(
+  "100000", // 100 USDC
+  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC address on ETH
+)
 ```
 
-### Rollup
+In the above example, the user is allocating 100 USDC of allowance to the Forwarder contract. 
 
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
+**Step 3: Submit the transaction**
 
-### TypeScript
+The function requires the following parameters:
 
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
-}
-```
-
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
-
-## Module Formats
-
-CJS, ESModules, and UMD module formats are supported.
-
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
-
-## Named Exports
-
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
-
-## Including Styles
-
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
-
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
-
-## Publishing to NPM
-
-We recommend using [np](https://github.com/sindresorhus/np).
+|Params|Type|Description|
+|---|---|---|
+| `feeToken` | string | **REQUIRED:**  The fee token address |
+| `gasLimit` | string | **REQUIRED:**  The gas limit |
+| `gasPrice` | string | **REQUIRED:**  The gas price |
+| `duration` | string | **REQUIRED:**  The duration in seconds until the meta-txn expires |
+| `domainName` | string | **REQUIRED:**  The EIP712 domain name |
+| `useOraclePriceFeed` | boolean | **REQUIRED:** True: use an oracle price feed as a source to fetch fee token price, false: otherwise |
+| `targetAddress` | string | **REQUIRED:**  The address of the implementation contract |
+| `targetAbi` | string | **REQUIRED:**  The abi of the implementation contract |
+| `methodName` | string | **REQUIRED:**  The name of the method to invoke |
+| `params` | Array<any> | **OPTIONAL:**  The method parameters to be stored as an array |

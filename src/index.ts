@@ -75,7 +75,7 @@ export default class Conveyor {
    * @param gasPrice - the gas price
    * @param duration - the duration in seconds until the meta-txn expires
    * @param domainName - the EIP712 domain name
-   * @param useOraclePriceFeed - whether to use an oracle price feed as a source to fetch fee token price
+   * @param useOraclePriceFeed - True: use an oracle price feed as a source to fetch fee token price, false: otherwise
    * @param targetAddress - the address of the implementation contract
    * @param targetAbi - the abi of the implementation contract
    * @param methodName - the name of the method to invoke
