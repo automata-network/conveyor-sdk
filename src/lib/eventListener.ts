@@ -1,4 +1,4 @@
-import { Response } from '../index';
+import { Response } from './types';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { utils } from 'ethers';
 const { Interface } = utils;
