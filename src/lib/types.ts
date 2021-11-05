@@ -22,7 +22,7 @@ export interface MetaTxn {
 export interface Domain {
   name: string;
   version: string;
-  chainId: number;
+  chainId: string;
   verifyingContract: string;
 }
 

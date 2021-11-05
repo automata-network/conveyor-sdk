@@ -1,3 +1,4 @@
+import { BigNumber } from '@ethersproject/bignumber';
 import { Domain } from './types';
 
 export const DOMAIN_TYPE = [
@@ -41,7 +42,7 @@ export function getDomain(
   return {
     name: domain_name,
     version: '1',
-    chainId: chain_id,
+    chainId: BigNumber.from(chain_id).toHexString(),
     verifyingContract: contractAddress,
   };
 }
