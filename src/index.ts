@@ -235,7 +235,7 @@ async function _buildForwarderEIP712(
     },
     domain,
     primaryType: 'Forwarder',
-    content,
+    message: content,
   };
   const data = JSON.stringify(eip712Msg);
   const signature: Signature = await provider.send('eth_signTypedData_v4', [
