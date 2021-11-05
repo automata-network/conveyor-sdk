@@ -24,7 +24,7 @@ export const PRICE_API_PREFIX: { [chainId in ChainId]?: string } = {
 async function calculateFee(
   chainId: ChainId,
   token: string,
-  tokenDecimals: number,
+  tokenDecimals: BigNumber,
   gasFee: BigNumber,
   nativeToken: string,
   nativeTokenDecimals = 18
@@ -58,7 +58,7 @@ async function calculateFee(
   }
   const factor = new JSBigNumber(10)
     .pow(nativeTokenDecimals)
-    .div(new JSBigNumber(10).pow(tokenDecimals));
+    .div(new JSBigNumber(10).pow(tokenDecimals.toString()));
   const adjustedPrice = new JSBigNumber(ethPerToken).multipliedBy(factor); // WEI per token - adjusted for the token decimals
   const fee = new JSBigNumber(gasFee.toString()).div(adjustedPrice);
   const roundedFee = fee.toFixed(0, 2);
@@ -75,7 +75,7 @@ async function calculateFee(
  */
 async function calculateFeeOnMatic(
   token: string,
-  tokenDecimals: number,
+  tokenDecimals: BigNumber,
   gasFee: BigNumber
 ): Promise<BigNumber> {
   const priceApiPrefix = PRICE_API_PREFIX[ChainId.MATIC];
@@ -91,7 +91,7 @@ async function calculateFeeOnMatic(
   const { bnb } = await data;
   const adjustedBnbPerToken = new JSBigNumber(bnb)
     .multipliedBy(new JSBigNumber(10).pow(18))
-    .div(new JSBigNumber(10).pow(tokenDecimals));
+    .div(new JSBigNumber(10).pow(tokenDecimals.toString()));
   const maticBnbRatioApi =
     'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=bnb';
   const maticResponse = await fetch(maticBnbRatioApi);
@@ -111,7 +111,7 @@ async function calculateFeeOnMatic(
 export default async function getFeePrice(
   chainId: ChainId,
   token: string,
-  tokenDecimals: number,
+  tokenDecimals: BigNumber,
   gasFee: BigNumber,
   nativeToken?: string,
   nativeTokenDecimals = 18
