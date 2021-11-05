@@ -146,7 +146,6 @@ export default class Conveyor {
         signerAddress
       );
       const reqParam = [
-        chainId.toString(),
         msg,
         sig.v.toString(),
         sig.r,
