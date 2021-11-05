@@ -140,7 +140,7 @@ export default class Conveyor {
       const { sig, msg } = await _buildForwarderEIP712(
         this.provider,
         chainId,
-        targetAddress,
+        FORWARDER_ADDRESS,
         domainName,
         message,
         signerAddress
@@ -221,12 +221,12 @@ export default class Conveyor {
 async function _buildForwarderEIP712(
   provider: JsonRpcProvider,
   chainId: number,
-  targetAddress: string,
+  forwarderAddress: string,
   domainName: string,
   content: MetaTxn,
   signerAddress: string
 ) {
-  const domain = await eip712.getDomain(targetAddress, chainId, domainName);
+  const domain = await eip712.getDomain(forwarderAddress, chainId, domainName);
   const eip712Msg = {
     types: {
       EIP712Domain: eip712.DOMAIN_TYPE,
