@@ -65,7 +65,7 @@ export default class Conveyor {
     tokenAddress: string
   ): Promise<void> {
     const erc20Token = new Contract(tokenAddress, erc20Abi, this.provider);
-    await erc20Token.approve(FORWARDER_ADDRESS, amount);
+    await erc20Token.connect(this.provider).approve(FORWARDER_ADDRESS, amount);
   }
 
   /**
