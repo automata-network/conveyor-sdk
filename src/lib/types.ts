@@ -41,3 +41,5 @@ export interface DaiPermitType {
   expiry: string;
   allowed: boolean;
 }
+
+export type AddressMap = { [chainId: number]: string };

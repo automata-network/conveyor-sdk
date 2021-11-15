@@ -7,11 +7,21 @@ import {
   constants,
 } from 'ethers';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { RELAYER_ENDPOINT_URL, FORWARDER_ADDRESS } from './lib/constants';
+import {
+  RELAYER_ENDPOINT_URL,
+  FORWARDER_ADDRESS,
+  DAI_ADDRESS,
+} from './lib/constants';
 import getFeePrice from './lib/fee';
 import * as eip712 from './lib/eip712';
 import { verifyMetaTxnResponse } from './lib/eventListener';
-import { MetaTxn, Response, Domain } from './lib/types';
+import {
+  MetaTxn,
+  Response,
+  Domain,
+  DaiPermitType,
+  PermitType,
+} from './lib/types';
 import { abi as erc20Abi } from './abi/IERC20Permit.json';
 import { abi as baseAbi } from './abi/ConveyorBase.json';
 import { abi as forwarderAbi } from './abi/ConveyorForwarder.json';
@@ -113,8 +123,6 @@ export default class Conveyor {
     const signerAddress = await signer.getAddress();
     let res: Response;
     if (conveyorIsEnabled) {
-      // TODO: Write this as a separate function.
-
       const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
       const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
       const feeDecimal = await feeErc20.decimals();
@@ -145,16 +153,8 @@ export default class Conveyor {
         message,
         signerAddress
       );
-      const reqParam = [
-        msg,
-        sig.v.toString(),
-        sig.r,
-        sig.s,
-      ];
-      const reqOptions = _buildRequest(
-        `/v3/metaTx/execute`, // need to check in with @liaoyi
-        reqParam
-      );
+      const reqParam = [msg, sig.v.toString(), sig.r, sig.s];
+      const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
       const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
       const response = (await jsonResponse.json()) as Response;
       res = response;
@@ -172,6 +172,120 @@ export default class Conveyor {
       );
     }
     return res;
+  }
+
+  /**
+   * Same as submitConveyorTransaction(), supports EIP2612 permit (and DAI-like) fee tokens.
+   * @param feeToken - the fee token address
+   * @param gasLimit - the gas limit
+   * @param gasPrice - the gas price
+   * @param duration - the duration in seconds until the meta-txn expires
+   * @param domainName - the EIP712 domain name
+   * @param useOraclePriceFeed - True: use an oracle price feed as a source to fetch fee token price, false: otherwise
+   * @param targetAddress - the address of the implementation contract
+   * @param targetAbi - the abi of the implementation contract
+   * @param methodName - the name of the method to invoke
+   * @param params - OPTIONAL: the method parameters to be stored as an array
+   */
+  async submitConveyorTransactionWithPermit(
+    feeToken: string,
+    gasLimit: string,
+    gasPrice: string,
+    duration: string,
+    domainName: string,
+    useOraclePriceFeed: boolean,
+    targetAddress: string,
+    targetAbi: ContractInterface,
+    methodName: string,
+    params: Array<any> = []
+  ): Promise<Response> {
+    const conveyorIsEnabled = await this.fetchConveyorStatus(targetAddress);
+    if (!conveyorIsEnabled) {
+      return this.submitTransaction(
+        targetAddress,
+        targetAbi,
+        methodName,
+        params
+      );
+    }
+    const now = Math.floor(Date.now() / 1000);
+    const deadline = BigNumber.from(now).add(BigNumber.from(duration));
+    const chainId = await this.provider.network.chainId;
+    const signer = await this.provider.getSigner();
+
+    // generate the PERMIT signature
+    const { sig: permitSig, msg: permitMsg } = await _buildPermitSignature(
+      this.provider,
+      chainId,
+      feeToken,
+      deadline
+    );
+
+    const signerAddress = await signer.getAddress();
+    const implementation = new Contract(
+      targetAddress,
+      targetAbi,
+      this.provider
+    );
+    const forwarder = new Contract(
+      FORWARDER_ADDRESS,
+      forwarderAbi,
+      this.provider
+    );
+    const encodedFunction = implementation.interface.encodeFunctionData(
+      methodName,
+      params
+    );
+    const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
+    const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
+    const feeDecimal = await feeErc20.decimals();
+    const maxTokenAmount = await getFeePrice(
+      chainId,
+      feeToken,
+      feeDecimal,
+      txnFee
+    );
+    const nonce = await forwarder.nonces(signerAddress);
+    const message: MetaTxn = {
+      from: signerAddress,
+      to: targetAddress,
+      feeToken: feeToken,
+      useOraclePriceFeed: useOraclePriceFeed,
+      maxTokenAmount: maxTokenAmount.toHexString(),
+      deadline: deadline.toHexString(),
+      nonce: nonce.toHexString(),
+      data: encodedFunction,
+    };
+    const { sig, msg } = await _buildForwarderEIP712(
+      this.provider,
+      chainId,
+      FORWARDER_ADDRESS,
+      domainName,
+      message,
+      signerAddress
+    );
+    const reqParam = [
+      msg,
+      sig.v.toString(),
+      sig.r,
+      sig.s,
+      permitMsg,
+      permitSig.v.toString(),
+      permitSig.r,
+      permitSig.s,
+    ];
+    const methods =
+      feeToken === DAI_ADDRESS[chainId]
+        ? 'executeWithPermit'
+        : 'executeWithDAIPermit';
+    const reqOptions = _buildRequest(`/v3/metaTx/${methods}`, reqParam);
+    const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
+    let response = (await jsonResponse.json()) as Response;
+    const { result } = response;
+    if (result.success) {
+      response = await verifyMetaTxnResponse(this.provider, response);
+    }
+    return response;
   }
 
   /**
@@ -232,7 +346,7 @@ async function _buildForwarderEIP712(
       EIP712Domain: eip712.DOMAIN_TYPE,
       Forwarder: eip712.FORWARDER_TYPE,
     },
-    domain,
+    domain: domain,
     primaryType: 'Forwarder',
     message: content,
   };
@@ -277,4 +391,53 @@ function _verifySignature(
   if (recovered !== signerAddress || recovered === zeroAddress) {
     throw new Error('Signature verification failed');
   }
+}
+
+async function _buildPermitSignature(
+  provider: JsonRpcProvider,
+  chainId: number,
+  feeToken: string,
+  deadline: BigNumber
+) {
+  const domain = await eip712.getDomain(feeToken, chainId, 'Permit');
+  let permitType;
+  let permitContent: PermitType | DaiPermitType;
+  const signer = await provider.getSigner();
+  const user = await signer.getAddress();
+  const token = new Contract(feeToken, erc20Abi, provider);
+  const nonce = await token.nonces(user);
+  if (feeToken === DAI_ADDRESS[chainId]) {
+    permitType = eip712.PERMIT_DAI_TYPE;
+    permitContent = {
+      holder: user,
+      spender: FORWARDER_ADDRESS,
+      nonce: nonce.toHexString(),
+      expiry: deadline.toHexString(),
+      allowed: true,
+    };
+  } else {
+    permitType = eip712.PERMIT_TYPE;
+    permitContent = {
+      owner: user,
+      spender: FORWARDER_ADDRESS,
+      value: BigNumber.from(Number.MAX_SAFE_INTEGER).toHexString(),
+      nonce: nonce.toHexString(),
+      deadline: deadline.toHexString(),
+    };
+  }
+  const message = {
+    types: {
+      EIP712Domain: eip712.DOMAIN_TYPE,
+      Permit: permitType,
+    },
+    domain: domain,
+    primaryType: 'Permit',
+    message: permitContent,
+  };
+  const data = JSON.stringify(message);
+  const signature: Signature = await provider.send('eth_signTypedData_v4', [
+    user,
+    data,
+  ]);
+  return { sig: splitSignature(signature), msg: message };
 }
