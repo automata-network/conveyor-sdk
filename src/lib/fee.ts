@@ -67,45 +67,51 @@ async function calculateFee(
 }
 
 /**
- * Same as the calculateFee() method but used exclusively for calculating token fees on the Matic network
+ * Same as the calculateFee() method but requires a price conversion from BNB to the native currency
+ * @param chainId the chainId of the network
  * @param token the payment token
  * @param tokenDecimals the decimals of the token
  * @param gasFee the transaction fee
  * @returns the total amount of tokens to be paid for the transaction fee
  */
-async function calculateFeeOnMatic(
+ export async function calculateFeeThenConvert(
+  chainId: ChainId,
   token: string,
   tokenDecimals: BigNumber,
   gasFee: BigNumber
 ): Promise<BigNumber> {
-  const priceApiPrefix = PRICE_API_PREFIX[ChainId.MATIC];
-  const response = await fetch(
-    `${priceApiPrefix}contract_addresses=${token}&vs_currencies=bnb`
-  );
+  let priceApiPrefix: string
+  let network: string
+  switch (chainId) {
+    case ChainId.MATIC:
+      priceApiPrefix = PRICE_API_PREFIX[ChainId.MATIC]!
+      network = 'matic-network'
+      break
+    default:
+      throw new Error(`Error: API support for the provided chainId ${chainId} is not supported`)
+  }
+  const response = await fetch(`${priceApiPrefix}contract_addresses=${token}&vs_currencies=bnb`)
   const data: Promise<any> = response.json().then(res => {
     if (Object.keys(res).length === 0) {
-      throw new Error('Error: Unsupported fee token.');
+      throw new Error('Error: Unsupported fee token.')
     }
-    return Object.values(res)[0];
-  });
-  const { bnb } = await data;
+    return Object.values(res)[0]
+  })
+  const { bnb } = await data
   const adjustedBnbPerToken = new JSBigNumber(bnb)
     .multipliedBy(new JSBigNumber(10).pow(18))
-    .div(new JSBigNumber(10).pow(tokenDecimals.toString()));
-  const maticBnbRatioApi =
-    'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=bnb';
-  const maticResponse = await fetch(maticBnbRatioApi);
-  const maticResponseMap = await maticResponse.json();
-  const maticData = maticResponseMap['matic-network'];
-  const maticBnb = maticData['bnb'];
-  const bnbPerMatic = new JSBigNumber(maticBnb);
+    .div(new JSBigNumber(10).pow(tokenDecimals.toString()))
+  const nativeBnbRatioApi = `https://api.coingecko.com/api/v3/simple/price?ids=${network}&vs_currencies=bnb`
+  const nativeResponse = await fetch(nativeBnbRatioApi)
+  const nativeResponseMap = await nativeResponse.json()
+  const nativeData = nativeResponseMap[network]
+  const nativeBnb = nativeData['bnb']
+  const bnbPerNative = new JSBigNumber(nativeBnb)
 
-  const fee = new JSBigNumber(gasFee.toString()).div(
-    adjustedBnbPerToken.div(bnbPerMatic)
-  );
-  const roundedFee = fee.toFixed(0, 2);
-  const max = parseInt(roundedFee) < 1 ? '1' : roundedFee;
-  return BigNumber.from(max);
+  const fee = new JSBigNumber(gasFee.toString()).div(adjustedBnbPerToken.div(bnbPerNative))
+  const roundedFee = fee.toFixed(0, 2)
+  const max = parseInt(roundedFee) < 1 ? '1' : roundedFee
+  return BigNumber.from(max)
 }
 
 export default async function getFeePrice(
@@ -118,7 +124,7 @@ export default async function getFeePrice(
 ): Promise<BigNumber> {
   switch (chainId) {
     case ChainId.MATIC:
-      return calculateFeeOnMatic(token, tokenDecimals, gasFee);
+      return calculateFeeThenConvert(chainId, token, tokenDecimals, gasFee);
     case ChainId.MAINNET:
       return calculateFee(
         chainId,
