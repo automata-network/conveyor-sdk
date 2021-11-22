@@ -14,9 +14,10 @@ export async function verifyMetaTxnResponse(
   provider: JsonRpcProvider,
   response: Response
 ): Promise<Response> {
-  const receipt = await provider.getTransactionReceipt(
-    response.result.txnHash!
-  );
+  let receipt = null;
+  while (receipt === null) {
+    receipt = await provider.getTransactionReceipt(response.result.txnHash!);
+  }
   const logs = receipt.logs;
   let res: Response;
   for (const log of logs) {
