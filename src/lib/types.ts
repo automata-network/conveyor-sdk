@@ -17,6 +17,7 @@ export interface MetaTxn {
   deadline: string;
   nonce: string;
   data: string;
+  extendCategories: number[];
 }
 
 export interface Domain {

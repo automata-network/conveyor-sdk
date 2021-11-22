@@ -16,6 +16,7 @@ export const FORWARDER_TYPE = [
   { name: 'deadline', type: 'uint256' },
   { name: 'nonce', type: 'uint256' },
   { name: 'data', type: 'bytes' },
+  { name: 'extendCategories', type: 'uint256[]' },
 ];
 
 export const PERMIT_TYPE = [

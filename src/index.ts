@@ -98,6 +98,7 @@ export default class Conveyor {
     duration: string,
     domainName: string,
     useOraclePriceFeed: boolean,
+    extendCategories: Array<number>,
     targetAddress: string,
     targetAbi: ContractInterface,
     methodName: string,
@@ -144,6 +145,7 @@ export default class Conveyor {
         deadline: deadline.toHexString(),
         nonce: nonce.toHexString(),
         data: encodedFunction,
+        extendCategories: extendCategories,
       };
       const { sig, msg } = await _buildForwarderEIP712(
         this.provider,
@@ -194,6 +196,7 @@ export default class Conveyor {
     duration: string,
     domainName: string,
     useOraclePriceFeed: boolean,
+    extendCategories: Array<number>,
     targetAddress: string,
     targetAbi: ContractInterface,
     methodName: string,
@@ -255,6 +258,7 @@ export default class Conveyor {
       deadline: deadline.toHexString(),
       nonce: nonce.toHexString(),
       data: encodedFunction,
+      extendCategories: extendCategories,
     };
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,
