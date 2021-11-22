@@ -9,6 +9,10 @@ export const PRICE_API_PREFIX: { [chainId in ChainId]?: string } = {
     'https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?',
   [ChainId.MAINNET]:
     'https://api.coingecko.com/api/v3/simple/token_price/ethereum?',
+  [ChainId.ARBITRUM]:
+    'https://api.coingecko.com/api/v3/simple/token_price/arbitrum-one?',
+  [ChainId.MOONRIVER]:
+    'https://api.coingecko.com/api/v3/simple/token_price/moonriver?',
 };
 
 /**
@@ -149,6 +153,17 @@ export default async function getFeePrice(
         'bnb',
         nativeTokenDecimals
       );
+    case ChainId.ARBITRUM:
+      return calculateFee(
+        chainId,
+        token,
+        tokenDecimals,
+        gasFee,
+        'eth',
+        nativeTokenDecimals
+      );
+    case ChainId.MOONRIVER:
+      return calculateFeeThenConvert(chainId, token, tokenDecimals, gasFee);
     default:
       return calculateFee(
         chainId,
