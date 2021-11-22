@@ -139,9 +139,14 @@
               "internalType": "bytes",
               "name": "data",
               "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "extendCategories",
+              "type": "uint256[]"
             }
           ],
-          "internalType": "struct ConveyorForwarder.MetaTransaction",
+          "internalType": "struct ConveyorTypes.MetaTransaction",
           "name": "metatx",
           "type": "tuple"
         },
@@ -173,9 +178,14 @@
               "type": "bytes32"
             }
           ],
-          "internalType": "struct ConveyorForwarder.SIGNATURE_TYPE",
+          "internalType": "struct ConveyorTypes.Sig",
           "name": "sig",
           "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "extendParamData",
+          "type": "bytes"
         }
       ],
       "name": "executeMetaTx",
@@ -237,9 +247,14 @@
               "internalType": "bytes",
               "name": "data",
               "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "extendCategories",
+              "type": "uint256[]"
             }
           ],
-          "internalType": "struct ConveyorForwarder.MetaTransaction",
+          "internalType": "struct ConveyorTypes.MetaTransaction",
           "name": "metatx",
           "type": "tuple"
         },
@@ -271,15 +286,20 @@
               "type": "bytes32"
             }
           ],
-          "internalType": "struct ConveyorForwarder.SIGNATURE_TYPE",
+          "internalType": "struct ConveyorTypes.Sig",
           "name": "sig",
           "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "extendParamData",
+          "type": "bytes"
         },
         {
           "components": [
             {
               "internalType": "address",
-              "name": "owner",
+              "name": "holder",
               "type": "address"
             },
             {
@@ -289,24 +309,26 @@
             },
             {
               "internalType": "uint256",
-              "name": "value",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
               "name": "nonce",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "deadline",
+              "name": "expiry",
               "type": "uint256"
             },
             {
               "internalType": "bool",
               "name": "allowed",
               "type": "bool"
-            },
+            }
+          ],
+          "internalType": "struct ConveyorTypes.DAIPermit",
+          "name": "permit",
+          "type": "tuple"
+        },
+        {
+          "components": [
             {
               "internalType": "uint8",
               "name": "v",
@@ -323,8 +345,8 @@
               "type": "bytes32"
             }
           ],
-          "internalType": "struct ConveyorForwarder.PERMIT_TYPE",
-          "name": "permit",
+          "internalType": "struct ConveyorTypes.Sig",
+          "name": "permitSig",
           "type": "tuple"
         }
       ],
@@ -387,9 +409,14 @@
               "internalType": "bytes",
               "name": "data",
               "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "extendCategories",
+              "type": "uint256[]"
             }
           ],
-          "internalType": "struct ConveyorForwarder.MetaTransaction",
+          "internalType": "struct ConveyorTypes.MetaTransaction",
           "name": "metatx",
           "type": "tuple"
         },
@@ -421,9 +448,14 @@
               "type": "bytes32"
             }
           ],
-          "internalType": "struct ConveyorForwarder.SIGNATURE_TYPE",
+          "internalType": "struct ConveyorTypes.Sig",
           "name": "sig",
           "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "extendParamData",
+          "type": "bytes"
         },
         {
           "components": [
@@ -451,12 +483,14 @@
               "internalType": "uint256",
               "name": "deadline",
               "type": "uint256"
-            },
-            {
-              "internalType": "bool",
-              "name": "allowed",
-              "type": "bool"
-            },
+            }
+          ],
+          "internalType": "struct ConveyorTypes.Permit",
+          "name": "permit",
+          "type": "tuple"
+        },
+        {
+          "components": [
             {
               "internalType": "uint8",
               "name": "v",
@@ -473,8 +507,8 @@
               "type": "bytes32"
             }
           ],
-          "internalType": "struct ConveyorForwarder.PERMIT_TYPE",
-          "name": "permit",
+          "internalType": "struct ConveyorTypes.Sig",
+          "name": "permitSig",
           "type": "tuple"
         }
       ],
