@@ -1,4 +1,4 @@
-import Conveyor from './conveyor';
+import Conveyor from './Conveyor';
 import getFeePrice from './lib/fee';
 
 export { ChainId } from './lib/enums';
