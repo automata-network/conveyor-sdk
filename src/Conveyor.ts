@@ -167,6 +167,9 @@ export default class Conveyor {
     const nonce = await forwarder.nonces(signerAddress);
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigNumber.from(now).add(BigNumber.from(duration));
+    const hexCategories = extendCategories.map(category => {
+      return BigNumber.from(category).toHexString();
+    });
     const message: MetaTxn = {
       from: signerAddress,
       to: targetAddress,
@@ -176,7 +179,7 @@ export default class Conveyor {
       deadline: deadline.toHexString(),
       nonce: nonce.toHexString(),
       data: encodedFunction,
-      extendCategories: extendCategories,
+      extendCategories: hexCategories,
     };
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,
@@ -276,6 +279,9 @@ export default class Conveyor {
       txnFee
     );
     const nonce = await forwarder.nonces(signerAddress);
+    const hexCategories = extendCategories.map(category => {
+      return BigNumber.from(category).toHexString();
+    });
     const message: MetaTxn = {
       from: signerAddress,
       to: targetAddress,
@@ -285,7 +291,7 @@ export default class Conveyor {
       deadline: deadline.toHexString(),
       nonce: nonce.toHexString(),
       data: encodedFunction,
-      extendCategories: extendCategories,
+      extendCategories: hexCategories,
     };
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,

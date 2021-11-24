@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers';
+
 export interface Response {
   id: number;
   jsonrpc: string;
@@ -17,7 +19,7 @@ export interface MetaTxn {
   deadline: string;
   nonce: string;
   data: string;
-  extendCategories: number[];
+  extendCategories: string[];
 }
 
 export interface Domain {
