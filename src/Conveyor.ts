@@ -130,6 +130,14 @@ export default class Conveyor {
     params: Array<any> = []
   ): Promise<Response> {
     const conveyorIsEnabled = await this.fetchConveyorStatus(targetAddress);
+    if (!conveyorIsEnabled) {
+      return this.submitTransaction(
+        targetAddress,
+        targetAbi,
+        methodName,
+        params
+      );
+    }
     const implementation = new Contract(
       targetAddress,
       targetAbi,
@@ -147,57 +155,48 @@ export default class Conveyor {
     const chainId = await this.provider.network.chainId;
     const signer = await this.provider.getSigner();
     const signerAddress = await signer.getAddress();
+    const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
+    const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
+    const feeDecimal = await feeErc20.decimals();
+    const maxTokenAmount = await getFeePrice(
+      chainId,
+      feeToken,
+      feeDecimal,
+      txnFee
+    );
+    const nonce = await forwarder.nonces(signerAddress);
+    const now = Math.floor(Date.now() / 1000);
+    const deadline = BigNumber.from(now).add(BigNumber.from(duration));
+    const message: MetaTxn = {
+      from: signerAddress,
+      to: targetAddress,
+      feeToken: feeToken,
+      useOraclePriceFeed: useOraclePriceFeed,
+      maxTokenAmount: maxTokenAmount.toHexString(),
+      deadline: deadline.toHexString(),
+      nonce: nonce.toHexString(),
+      data: encodedFunction,
+      extendCategories: extendCategories,
+    };
+    const { sig, msg } = await _buildForwarderEIP712(
+      this.provider,
+      chainId,
+      FORWARDER_ADDRESS,
+      domainName,
+      message,
+      signerAddress
+    );
+    const reqParam = [msg, sig.v.toString(), sig.r, sig.s];
+    const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
+    console.log('sending request...');
+    console.log(reqOptions);
+    const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
+    const response = (await jsonResponse.json()) as Response;
+    const { result } = response;
     let res: Response;
-    if (conveyorIsEnabled) {
-      const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
-      const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
-      const feeDecimal = await feeErc20.decimals();
-      const maxTokenAmount = await getFeePrice(
-        chainId,
-        feeToken,
-        feeDecimal,
-        txnFee
-      );
-      const nonce = await forwarder.nonces(signerAddress);
-      const now = Math.floor(Date.now() / 1000);
-      const deadline = BigNumber.from(now).add(BigNumber.from(duration));
-      const message: MetaTxn = {
-        from: signerAddress,
-        to: targetAddress,
-        feeToken: feeToken,
-        useOraclePriceFeed: useOraclePriceFeed,
-        maxTokenAmount: maxTokenAmount.toHexString(),
-        deadline: deadline.toHexString(),
-        nonce: nonce.toHexString(),
-        data: encodedFunction,
-        extendCategories: extendCategories,
-      };
-      const { sig, msg } = await _buildForwarderEIP712(
-        this.provider,
-        chainId,
-        FORWARDER_ADDRESS,
-        domainName,
-        message,
-        signerAddress
-      );
-      const reqParam = [msg, sig.v.toString(), sig.r, sig.s];
-      const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
-      console.log('sending request...');
-      console.log(reqOptions);
-      const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
-      const response = (await jsonResponse.json()) as Response;
-      res = response;
-      const { result } = response;
-      if (result.success) {
-        res = await verifyMetaTxnResponse(this.provider, response);
-      }
-    } else {
-      res = await this.submitTransaction(
-        targetAddress,
-        targetAbi,
-        methodName,
-        params
-      );
+    res = response;
+    if (result.success) {
+      res = await verifyMetaTxnResponse(this.provider, response);
     }
     console.log('response received...');
     console.log(res);
@@ -232,7 +231,7 @@ export default class Conveyor {
   ): Promise<Response> {
     const conveyorIsEnabled = await this.fetchConveyorStatus(targetAddress);
     if (!conveyorIsEnabled) {
-      return this.submitTransaction(
+      return await this.submitTransaction(
         targetAddress,
         targetAbi,
         methodName,

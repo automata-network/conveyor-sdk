@@ -2,7 +2,7 @@ import { AddressMap } from './types';
 import { ChainId } from './enums';
 
 export const RELAYER_ENDPOINT_URL = '';
-export const FORWARDER_ADDRESS = '';
+export const FORWARDER_ADDRESS = '0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD';
 
 export const DAI_ADDRESS: AddressMap = {
   [ChainId.MAINNET]: '0x6b175474e89094c44da98b954eedeac495271d0f',
