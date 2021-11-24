@@ -157,6 +157,8 @@ export default class Conveyor {
       );
       const reqParam = [msg, sig.v.toString(), sig.r, sig.s];
       const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
+      console.log('sending request...');
+      console.log(reqOptions);
       const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
       const response = (await jsonResponse.json()) as Response;
       res = response;
@@ -164,7 +166,6 @@ export default class Conveyor {
       if (result.success) {
         res = await verifyMetaTxnResponse(this.provider, response);
       }
-      return res;
     } else {
       res = await this.submitTransaction(
         targetAddress,
@@ -173,6 +174,8 @@ export default class Conveyor {
         params
       );
     }
+    console.log('response received...');
+    console.log(res);
     return res;
   }
 
@@ -289,6 +292,8 @@ export default class Conveyor {
     if (result.success) {
       response = await verifyMetaTxnResponse(this.provider, response);
     }
+    console.log('response received...');
+    console.log(response);
     return response;
   }
 
