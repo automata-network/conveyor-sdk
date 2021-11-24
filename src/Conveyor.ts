@@ -442,12 +442,13 @@ async function _buildPermitSignature(
   feeToken: string,
   deadline: BigNumber
 ) {
-  const domain = await eip712.getDomain(feeToken, chainId, 'Permit');
-  let permitType;
-  let permitContent: PermitType | DaiPermitType;
   const signer = await provider.getSigner();
   const user = await signer.getAddress();
   const token = new Contract(feeToken, erc20Abi, provider);
+  const name = await token.name();
+  const domain = await eip712.getDomain(feeToken, chainId, name);
+  let permitType;
+  let permitContent: PermitType | DaiPermitType;
   const nonce = await token.nonces(user);
   if (feeToken === DAI_ADDRESS[chainId]) {
     permitType = eip712.PERMIT_DAI_TYPE;
