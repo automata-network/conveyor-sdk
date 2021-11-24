@@ -453,7 +453,7 @@ async function _buildPermitSignature(
     permitContent = {
       owner: user,
       spender: FORWARDER_ADDRESS,
-      value: BigNumber.from(Number.MAX_SAFE_INTEGER).toHexString(),
+      value: BigNumber.from('1000000000000000000000000000000').toHexString(),
       nonce: nonce.toHexString(),
       deadline: deadline.toHexString(),
     };
