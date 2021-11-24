@@ -1,13 +1,13 @@
 import { AddressMap } from './types';
 import { ChainId } from './enums';
 
-export const RELAYER_ENDPOINT_URL = '';
-export const FORWARDER_ADDRESS = '0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD';
+export const RELAYER_ENDPOINT_URL =
+  'https://conveyor-geode-staging.ata.network';
+export const FORWARDER_ADDRESS = '0x84194C00E190dE7A10180853f6a28502Ad1A1029';
 
 export const DAI_ADDRESS: AddressMap = {
-  [ChainId.MAINNET]: '0x6b175474e89094c44da98b954eedeac495271d0f',
-  [ChainId.BSC]: '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
-  [ChainId.MATIC]: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063',
+  [ChainId.MAINNET]: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+  [ChainId.MATIC]: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
 };
 
 export const USDC_ADDRESS: AddressMap = {
