@@ -55,14 +55,25 @@ export default class Conveyor {
   async toggleConveyorProtection(
     targetAddress: string,
     enabled: boolean
-  ): Promise<void> {
+  ): Promise<Response> {
     const implementation = new Contract(targetAddress, baseAbi, this.provider);
     const signer = await this.provider.getSigner();
+    let tx;
     if (enabled) {
-      await implementation.connect(signer).enableConveyorProtection();
+      tx = await implementation.connect(signer).enableConveyorProtection();
     } else {
-      await implementation.connect(signer).disableConveyorProtection();
+      tx = await implementation.connect(signer).disableConveyorProtection();
     }
+    const receipt = await tx.wait();
+    return {
+      id: 1,
+      jsonrpc: '2.0',
+      result: {
+        success: receipt.status === 1,
+        errorMessage: receipt.status === 1 ? '' : 'Transaction Reverted',
+        txnHash: receipt.transactionHash,
+      },
+    };
   }
 
   /**
@@ -74,10 +85,22 @@ export default class Conveyor {
   async erc20ApproveForwarder(
     amount: string,
     tokenAddress: string
-  ): Promise<void> {
+  ): Promise<Response> {
     const erc20Token = new Contract(tokenAddress, erc20Abi, this.provider);
     const signer = await this.provider.getSigner();
-    await erc20Token.connect(signer).approve(FORWARDER_ADDRESS, amount);
+    const tx = await erc20Token
+      .connect(signer)
+      .approve(FORWARDER_ADDRESS, amount);
+    const receipt = await tx.wait();
+    return {
+      id: 1,
+      jsonrpc: '2.0',
+      result: {
+        success: receipt.status === 1,
+        errorMessage: receipt.status === 1 ? '' : 'Transaction Reverted',
+        txnHash: receipt.transactionHash,
+      },
+    };
   }
 
   /**
