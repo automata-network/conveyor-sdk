@@ -313,8 +313,8 @@ export default class Conveyor {
     ];
     const methods =
       feeToken === DAI_ADDRESS[chainId]
-        ? 'executeWithPermit'
-        : 'executeWithDAIPermit';
+        ? 'executeWithDAIPermit'
+        : 'executeWithPermit';
     const reqOptions = _buildRequest(`/v3/metaTx/${methods}`, reqParam);
     const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
     let response = (await jsonResponse.json()) as Response;
