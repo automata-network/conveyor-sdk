@@ -12,6 +12,7 @@ export const FORWARDER_TYPE = [
   { name: 'from', type: 'address' },
   { name: 'to', type: 'address' },
   { name: 'feeToken', type: 'address' },
+  { name: 'useOraclePriceFeed', type: 'bool' },
   { name: 'maxTokenAmount', type: 'uint256' },
   { name: 'deadline', type: 'uint256' },
   { name: 'nonce', type: 'uint256' },

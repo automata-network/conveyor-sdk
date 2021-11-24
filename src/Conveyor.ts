@@ -111,6 +111,7 @@ export default class Conveyor {
    * @param duration - the duration in seconds until the meta-txn expires
    * @param domainName - the EIP712 domain name
    * @param useOraclePriceFeed - True: use an oracle price feed as a source to fetch fee token price, false: otherwise
+   * @param extendCategories - array of numbers representing the extension categories
    * @param targetAddress - the address of the implementation contract
    * @param targetAbi - the abi of the implementation contract
    * @param methodName - the name of the method to invoke
@@ -214,6 +215,7 @@ export default class Conveyor {
    * @param duration - the duration in seconds until the meta-txn expires
    * @param domainName - the EIP712 domain name
    * @param useOraclePriceFeed - True: use an oracle price feed as a source to fetch fee token price, false: otherwise
+   * @param extendCategories - array of numbers representing the extension categories
    * @param targetAddress - the address of the implementation contract
    * @param targetAbi - the abi of the implementation contract
    * @param methodName - the name of the method to invoke
@@ -316,6 +318,8 @@ export default class Conveyor {
         ? 'executeWithDAIPermit'
         : 'executeWithPermit';
     const reqOptions = _buildRequest(`/v3/metaTx/${methods}`, reqParam);
+    console.log('sending request...');
+    console.log(reqOptions);
     const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
     let response = (await jsonResponse.json()) as Response;
     const { result } = response;

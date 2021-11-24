@@ -1,5 +1,3 @@
-import { BigNumber } from 'ethers';
-
 export interface Response {
   id: number;
   jsonrpc: string;
