@@ -57,10 +57,11 @@ export default class Conveyor {
     enabled: boolean
   ): Promise<void> {
     const implementation = new Contract(targetAddress, baseAbi, this.provider);
+    const signer = await this.provider.getSigner();
     if (enabled) {
-      await implementation.enableConveyorProtection();
+      await implementation.connect(signer).enableConveyorProtection();
     } else {
-      await implementation.disableConveyorProtection();
+      await implementation.connect(signer).disableConveyorProtection();
     }
   }
 
@@ -75,7 +76,8 @@ export default class Conveyor {
     tokenAddress: string
   ): Promise<void> {
     const erc20Token = new Contract(tokenAddress, erc20Abi, this.provider);
-    await erc20Token.connect(this.provider).approve(FORWARDER_ADDRESS, amount);
+    const signer = await this.provider.getSigner();
+    await erc20Token.connect(signer).approve(FORWARDER_ADDRESS, amount);
   }
 
   /**
