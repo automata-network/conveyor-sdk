@@ -20,22 +20,6 @@ export const FORWARDER_TYPE = [
   { name: 'extendCategories', type: 'uint256[]' },
 ];
 
-export const PERMIT_TYPE = [
-  { name: 'owner', type: 'address' },
-  { name: 'spender', type: 'address' },
-  { name: 'value', type: 'uint256' },
-  { name: 'nonce', type: 'uint256' },
-  { name: 'deadline', type: 'uint256' },
-];
-
-export const PERMIT_DAI_TYPE = [
-  { name: 'holder', type: 'address' },
-  { name: 'spender', type: 'address' },
-  { name: 'nonce', type: 'uint256' },
-  { name: 'expiry', type: 'uint256' },
-  { name: 'allowed', type: 'bool' },
-];
-
 export function getDomain(
   contractAddress: string,
   chain_id: number,

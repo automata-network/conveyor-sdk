@@ -27,20 +27,4 @@ export interface Domain {
   verifyingContract: string;
 }
 
-export interface PermitType {
-  owner: string;
-  spender: string;
-  value: string;
-  nonce: string;
-  deadline: string;
-}
-
-export interface DaiPermitType {
-  holder: string;
-  spender: string;
-  nonce: string;
-  expiry: string;
-  allowed: boolean;
-}
-
 export type AddressMap = { [chainId: number]: string };
