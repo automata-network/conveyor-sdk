@@ -18,6 +18,12 @@ import { abi as forwarderAbi } from './abi/ConveyorForwarder.json';
 const { splitSignature, verifyTypedData } = utils;
 
 const zeroAddress = constants.AddressZero;
+const forwarderConfig = process.env.FORWARDER
+  ? process.env.FORWARDER
+  : FORWARDER_ADDRESS;
+const relayerConfig = process.env.RELAYER
+  ? process.env.RELAYER
+  : RELAYER_ENDPOINT_URL;
 
 export default class Conveyor {
   provider: JsonRpcProvider;
@@ -80,7 +86,7 @@ export default class Conveyor {
     const signer = await this.provider.getSigner();
     const tx = await erc20Token
       .connect(signer)
-      .approve(FORWARDER_ADDRESS, amount);
+      .approve(forwarderConfig, amount);
     const receipt = await tx.wait();
     return {
       id: 1,
@@ -135,7 +141,7 @@ export default class Conveyor {
       this.provider
     );
     const forwarder = new Contract(
-      FORWARDER_ADDRESS,
+      forwarderConfig,
       forwarderAbi,
       this.provider
     );
@@ -175,7 +181,7 @@ export default class Conveyor {
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,
       chainId,
-      FORWARDER_ADDRESS,
+      forwarderConfig,
       domainName,
       message,
       signerAddress
@@ -184,7 +190,7 @@ export default class Conveyor {
     const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
     console.log('sending request...');
     console.log(reqOptions);
-    const jsonResponse = await fetch(RELAYER_ENDPOINT_URL, reqOptions);
+    const jsonResponse = await fetch(relayerConfig, reqOptions);
     const response = (await jsonResponse.json()) as Response;
     const { result } = response;
     let res: Response;
