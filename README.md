@@ -44,6 +44,24 @@ https://github.com/automata-network/conveyor-sdk
 
 ---
 
+# Configurable Variables
+
+The canonical `RELAYER_ENDPOINT_URL` and `FORWARDER_ADDRESS` are defined in the SDK. This is because most projects are likely using the same relayer and Forwarder contract. If your project were to fall in an exceptional circumstance which a dedicated relayer and forwarder are provided, you may simply overwrite the variables, by passing the following environmental variables
+
+```
+FORWARDER
+RELAYER
+```
+
+In JavaScript, it would look something like this:
+
+```javascript
+process.env.RELAYER = <url>
+process.env.FORWARDER = 0x<forwarder_address>
+```
+
+---
+
 # Quick Guide
 
 As mentioned previously, submitting a transaction using Conveyor only requires three steps.
