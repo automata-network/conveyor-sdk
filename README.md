@@ -34,7 +34,6 @@ The main module has the following functions built-in:
 
 - `erc20ApproveForwarder`- Sets an allowance for the Forwarder contract to transfer ERC20 tokens for fee payment.
 - `submitConveyorTransaction` - Constructs the request body to the Geode relayer to interact with contracts that are protected by Conveyor.
-- `submitConveyorTransactionWithPermit` - Similar as `submitConveyorTransaction`, this method must be used with an EIP 2612 compliant fee tokens.
 - `submitTransaction` - Submits a regular transaction directly to the target address. This can be used to execute methods that do not have the `onlyConveyor` modifier or to contracts that have disabled Conveyor protection.
 - `fetchConveyorStatus` - detects whether Conveyor protection is enabled for the given target contract.
 - `toggleConveyorProtection` - enables/disables Conveyor protection on the given target contract.
@@ -75,18 +74,29 @@ In the above example, the user is allocating 100 USDC of allowance to the Forwar
 
 The `submitConveyorTransaction()` function requires the following parameters:
 
-| Params               | Type          | Description                                                                                                                    |
-| -------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `feeToken`           | string        | **REQUIRED:** The fee token address                                                                                            |
-| `gasLimit`           | string        | **REQUIRED:** The gas limit                                                                                                    |
-| `gasPrice`           | string        | **REQUIRED:** The gas price                                                                                                    |
-| `duration`           | string        | **REQUIRED:** The duration in seconds until the meta-txn expires                                                               |
-| `domainName`         | string        | **REQUIRED:** The EIP712 domain name                                                                                           |
-| `useOraclePriceFeed` | boolean       | **REQUIRED:** True: use an oracle price feed as a source to fetch fee token price, false: otherwise                            |
-| `extendCategories`   | Array<number> | **REQUIRED:** An array of numeric categories that maps to the request extension type. Pass the `[0]` value to omit extensions. |
-| `targetAddress`      | string        | **REQUIRED:** The address of the implementation contract                                                                       |
-| `targetAbi`          | string        | **REQUIRED:** The abi of the implementation contract                                                                           |
-| `methodName`         | string        | **REQUIRED:** The name of the method to invoke                                                                                 |
-| `params`             | Array<any>    | **OPTIONAL:** The method parameters to be stored as an array                                                                   |
+| Params               | Type          | Description                                                                                                                                                                                                                                                                                               |
+| -------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feeToken`           | string        | **REQUIRED:** The fee token address                                                                                                                                                                                                                                                                       |
+| `gasLimit`           | string        | **REQUIRED:** The gas limit - this value is used for calculating the maximum fee token amount, it may not be the actual gas limit provided to the transaction                                                                                                                                             |
+| `gasPrice`           | string        | **REQUIRED:** The gas price - this value is used for calculating the maximum fee token amount, it may not be the actual gas price provided to the transaction                                                                                                                                             |
+| `duration`           | string        | **REQUIRED:** The duration in seconds until the meta-txn expires                                                                                                                                                                                                                                          |
+| `domainName`         | string        | **REQUIRED:** The EIP712 domain name                                                                                                                                                                                                                                                                      |
+| `useOraclePriceFeed` | boolean       | **REQUIRED:** True: use an oracle price feed as a source to fetch fee token price, false: otherwise                                                                                                                                                                                                       |
+| `extendCategories`   | Array<number> | **REQUIRED:** An array of numeric categories that maps to the request extension type. Pass the `[0]` value to omit extensions. To request an N-amount of extensions, provide an array of N-size with their corresponding categories. For example, to request x2 randomly generated numbers, input `[1,1]` |
+| `targetAddress`      | string        | **REQUIRED:** The address of the implementation contract                                                                                                                                                                                                                                                  |
+| `targetAbi`          | string        | **REQUIRED:** The abi of the implementation contract                                                                                                                                                                                                                                                      |
+| `methodName`         | string        | **REQUIRED:** The name of the method to invoke                                                                                                                                                                                                                                                            |
+| `params`             | Array<any>    | **OPTIONAL:** The method parameters to be stored as an array                                                                                                                                                                                                                                              |
 
 The `submitTransaction()` method can be invoked to execute functions that do not have the `onlyConveyor` modifier.
+
+---
+
+# Available extensions
+
+This section describes the category index that are passed into the `extendCategories` parameter to get external data that can be useful for your target contracts.
+
+| Category | Description                                                                |
+| -------- | -------------------------------------------------------------------------- |
+| 0        | No extension                                                               |
+| 1        | [VRF Generated Random Number](https://docs.chain.link/docs/chainlink-vrf/) |
