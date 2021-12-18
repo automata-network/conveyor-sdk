@@ -46,7 +46,7 @@ https://github.com/automata-network/conveyor-sdk
 
 # Configurable Variables
 
-The canonical `RELAYER_ENDPOINT_URL` and `FORWARDER_ADDRESS` are defined in the SDK. This is because most projects are likely using the same relayer and Forwarder contract. If your project were to fall in an exceptional circumstance which a dedicated relayer and forwarder are provided, you may simply overwrite the variables, by passing the following environmental variables
+The canonical `RELAYER_ENDPOINT_URL` and `FORWARDER_ADDRESS` are provided in the SDK. This is because most projects are likely using the same relayer and Forwarder contract. If your project were to fall in an exceptional circumstance which a dedicated relayer and forwarder are provided, you may simply overwrite those variables, by passing the following environmental variables
 
 ```
 FORWARDER
