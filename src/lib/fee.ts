@@ -91,6 +91,10 @@ export async function calculateFeeThenConvert(
       priceApiPrefix = PRICE_API_PREFIX[ChainId.MATIC]!;
       network = 'matic-network';
       break;
+    case ChainId.MOONRIVER:
+      priceApiPrefix = PRICE_API_PREFIX[ChainId.MOONRIVER]!;
+      network = 'moonriver';
+      break;
     default:
       throw new Error(
         `Error: API support for the provided chainId ${chainId} is not supported`
