@@ -156,6 +156,11 @@
           "type": "string"
         },
         {
+          "internalType": "bool",
+          "name": "relayerChargeEnabled",
+          "type": "bool"
+        },
+        {
           "internalType": "uint256",
           "name": "tokenPricePerNativeToken",
           "type": "uint256"
@@ -201,7 +206,7 @@
           "type": "bytes"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -341,6 +346,13 @@
         }
       ],
       "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdraw",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
