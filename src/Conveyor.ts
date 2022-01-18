@@ -10,7 +10,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { RELAYER_ENDPOINT_URL, FORWARDER_ADDRESS } from './lib/constants';
 import getFeePrice from './lib/fee';
 import * as eip712 from './lib/eip712';
-import { verifyMetaTxnResponse } from './lib/eventListener';
+import { verifyMetaTxnResponse, verifyFee } from './lib/eventListener';
 import { MetaTxn, Response, Domain } from './lib/types';
 import { abi as erc20Abi } from './abi/IERC20Permit.json';
 import { abi as baseAbi } from './abi/ConveyorBase.json';
@@ -18,7 +18,7 @@ import { abi as forwarderAbi } from './abi/ConveyorForwarder.json';
 const { splitSignature, verifyTypedData } = utils;
 
 const zeroAddress = constants.AddressZero;
-const forwarderConfig = process.env.FORWARDER
+const forwarderAddress = process.env.FORWARDER
   ? process.env.FORWARDER
   : FORWARDER_ADDRESS;
 const relayerConfig = process.env.RELAYER
@@ -86,7 +86,7 @@ export default class Conveyor {
     const signer = await this.provider.getSigner();
     const tx = await erc20Token
       .connect(signer)
-      .approve(forwarderConfig, amount);
+      .approve(forwarderAddress, amount);
     const receipt = await tx.wait();
     return {
       id: 1,
@@ -97,6 +97,16 @@ export default class Conveyor {
         txnHash: receipt.transactionHash,
       },
     };
+  }
+
+  /**
+   * Use this method to find out the amount of ERC20 fee token that is charged by the forwarder
+   * @param txnHash - the hash of the transaction
+   * @returns the ERC20 amount of the token, factored decimals.
+   */
+  async getFeeFromTxn(txnHash: string): Promise<BigNumber> {
+    const fee = await verifyFee(this.provider, txnHash, forwarderAddress);
+    return fee;
   }
 
   /**
@@ -141,7 +151,7 @@ export default class Conveyor {
       this.provider
     );
     const forwarder = new Contract(
-      forwarderConfig,
+      forwarderAddress,
       forwarderAbi,
       this.provider
     );
@@ -181,7 +191,7 @@ export default class Conveyor {
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,
       chainId,
-      forwarderConfig,
+      forwarderAddress,
       domainName,
       message,
       signerAddress
