@@ -165,12 +165,10 @@ export default class Conveyor {
     const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
     const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
     const feeDecimal = await feeErc20.decimals();
-    const maxTokenAmount = await getFeePrice(
-      chainId,
-      feeToken,
-      feeDecimal,
-      txnFee
-    );
+    const maxTokenAmount =
+      feeToken === zeroAddress
+        ? BigNumber.from(0)
+        : await getFeePrice(chainId, feeToken, feeDecimal, txnFee);
     const nonce = await forwarder.nonces(signerAddress);
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigNumber.from(now).add(BigNumber.from(duration));
