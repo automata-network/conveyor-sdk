@@ -1,3 +1,4 @@
+import { ENVIRONMENT } from './lib/enums';
 import {
   utils,
   Contract,
@@ -18,18 +19,24 @@ import { SignatureLike } from '@ethersproject/bytes';
 const { splitSignature, verifyTypedData } = utils;
 
 const zeroAddress = constants.AddressZero;
-const forwarderAddress = process.env.FORWARDER
-  ? process.env.FORWARDER
-  : FORWARDER_ADDRESS;
-const relayerConfig = process.env.RELAYER
-  ? process.env.RELAYER
-  : RELAYER_ENDPOINT_URL;
 
 export default class Conveyor {
+  forwarderAddress: string;
+
+  relayerConfig: string;
+
   provider: JsonRpcProvider;
 
-  constructor(_provider: JsonRpcProvider) {
+  constructor(
+    _provider: JsonRpcProvider,
+    _forwarder?: string,
+    _relayerConfig?: string,
+    _env = ENVIRONMENT.PRODUCTION
+  ) {
     this.provider = _provider;
+    this.forwarderAddress =
+      _forwarder || FORWARDER_ADDRESS[_provider.network.chainId];
+    this.relayerConfig = _relayerConfig || RELAYER_ENDPOINT_URL(_env);
   }
 
   /**
@@ -86,7 +93,7 @@ export default class Conveyor {
     const signer = await this.provider.getSigner();
     const tx = await erc20Token
       .connect(signer)
-      .approve(forwarderAddress, amount);
+      .approve(this.forwarderAddress, amount);
     const receipt = await tx.wait();
     return {
       id: 1,
@@ -105,7 +112,7 @@ export default class Conveyor {
    * @returns the ERC20 amount of the token, factored decimals.
    */
   async getFeeFromTxn(txnHash: string): Promise<BigNumber> {
-    const fee = await verifyFee(this.provider, txnHash, forwarderAddress);
+    const fee = await verifyFee(this.provider, txnHash, this.forwarderAddress);
     return fee;
   }
 
@@ -140,7 +147,7 @@ export default class Conveyor {
       this.provider
     );
     const forwarder = new Contract(
-      forwarderAddress,
+      this.forwarderAddress,
       forwarderAbi,
       this.provider
     );
@@ -178,7 +185,7 @@ export default class Conveyor {
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,
       chainId,
-      forwarderAddress,
+      this.forwarderAddress,
       domainName,
       message,
       signerAddress
@@ -188,7 +195,7 @@ export default class Conveyor {
     const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
     console.log('sending request...');
     console.log(reqOptions);
-    const jsonResponse = await fetch(relayerConfig, reqOptions);
+    const jsonResponse = await fetch(this.relayerConfig, reqOptions);
     const response = (await jsonResponse.json()) as Response;
     const { result } = response;
     let res: Response;
@@ -246,7 +253,7 @@ export default class Conveyor {
       this.provider
     );
     const forwarder = new Contract(
-      forwarderAddress,
+      this.forwarderAddress,
       forwarderAbi,
       this.provider
     );
@@ -284,7 +291,7 @@ export default class Conveyor {
     const { sig, msg } = await _buildForwarderEIP712(
       this.provider,
       chainId,
-      forwarderAddress,
+      this.forwarderAddress,
       domainName,
       message,
       signerAddress
@@ -298,7 +305,7 @@ export default class Conveyor {
     const reqOptions = _buildRequest(`/v3/metaTx/executeV2`, reqParam);
     console.log('sending request...');
     console.log(reqOptions);
-    const jsonResponse = await fetch(relayerConfig, reqOptions);
+    const jsonResponse = await fetch(this.relayerConfig, reqOptions);
     const response = (await jsonResponse.json()) as Response;
     const { result } = response;
     let res: Response;

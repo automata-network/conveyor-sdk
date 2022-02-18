@@ -28,3 +28,5 @@ export interface Domain {
 }
 
 export type AddressMap = { [chainId: number]: string };
+
+export type ConfigMap = { [env: number]: string[] };

@@ -1,15 +1,21 @@
-import { AddressMap } from './types';
-import { ChainId } from './enums';
+import { AddressMap, ConfigMap } from './types';
+import { ChainId, ENVIRONMENT } from './enums';
 
 // TODO: Provide additional relayer endpoint URLs
-const RELAYER_URLS: Array<string> = [
-  'https://conveyor-geode-staging.ata.network',
-];
+const RELAYER_URLS: ConfigMap = {
+  [ENVIRONMENT.TEST]: ['https://conveyor-geode-staging.ata.network'],
+  [ENVIRONMENT.PRODUCTION]: [
+    // TODO
+  ],
+};
 
-export const RELAYER_ENDPOINT_URL = getRandomStringFromArr(RELAYER_URLS);
+export const RELAYER_ENDPOINT_URL = (env: ENVIRONMENT) =>
+  getRandomStringFromArr(RELAYER_URLS[env]);
 
 // TODO: Subject to change.
-export const FORWARDER_ADDRESS = '0x84194C00E190dE7A10180853f6a28502Ad1A1029';
+export const FORWARDER_ADDRESS: AddressMap = {
+  [ChainId.MAINNET]: '0x84194C00E190dE7A10180853f6a28502Ad1A1029',
+};
 
 export const DAI_ADDRESS: AddressMap = {
   [ChainId.MAINNET]: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
