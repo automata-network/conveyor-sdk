@@ -1,7 +1,6 @@
 import {
   utils,
   Contract,
-  Signature,
   BigNumber,
   ContractInterface,
   constants,
@@ -15,6 +14,7 @@ import { MetaTxn, Response, Domain } from './lib/types';
 import { abi as erc20Abi } from './abi/IERC20Permit.json';
 import { abi as baseAbi } from './abi/ConveyorBase.json';
 import { abi as forwarderAbi } from './abi/ConveyorForwarder.json';
+import { SignatureLike } from '@ethersproject/bytes';
 const { splitSignature, verifyTypedData } = utils;
 
 const zeroAddress = constants.AddressZero;
@@ -110,18 +110,7 @@ export default class Conveyor {
   }
 
   /**
-   * Sends request to the relayer. If Conveyor protection is disabled, a transaction is sent directly to the target contract.
-   * @param feeToken - the fee token address
-   * @param gasLimit - the gas limit
-   * @param gasPrice - the gas price
-   * @param duration - the duration in seconds until the meta-txn expires
-   * @param domainName - the EIP712 domain name
-   * @param useOraclePriceFeed - True: use an oracle price feed as a source to fetch fee token price, false: otherwise
-   * @param extendCategories - array of numbers representing the extension categories
-   * @param targetAddress - the address of the implementation contract
-   * @param targetAbi - the abi of the implementation contract
-   * @param methodName - the name of the method to invoke
-   * @param params - OPTIONAL: the method parameters to be stored as an array
+   * @deprecated Use submitMetaTransaction instead
    */
   async submitConveyorTransaction(
     feeToken: string,
@@ -194,8 +183,119 @@ export default class Conveyor {
       message,
       signerAddress
     );
-    const reqParam = [msg, sig.v.toString(), sig.r, sig.s];
+    const signature = splitSignature(sig);
+    const reqParam = [msg, signature.v.toString(), signature.r, signature.s];
     const reqOptions = _buildRequest(`/v3/metaTx/execute`, reqParam);
+    console.log('sending request...');
+    console.log(reqOptions);
+    const jsonResponse = await fetch(relayerConfig, reqOptions);
+    const response = (await jsonResponse.json()) as Response;
+    const { result } = response;
+    let res: Response;
+    res = response;
+    if (result.success) {
+      res = await verifyMetaTxnResponse(this.provider, response);
+    }
+    console.log('response received...');
+    console.log(res);
+    return res;
+  }
+
+  /**
+   * Sends transaction the relayer. Otherwise if conveyor is disabled, a regular transaction is sent to the target contract directly.
+   * This method sends an API request using the executeMetaTxV2 method, which incorporates EIP 1271, a.k.a smart contracts signature verification.
+   * @param feeToken - the fee token address
+   * @param gasLimit - the gas limit
+   * @param gasPrice - the gas price
+   * @param duration - the duration in seconds until the meta-txn expires
+   * @param domainName - the EIP712 domain name
+   * @param useOraclePriceFeed - True: use an oracle price feed as a source to fetch fee token price, false: otherwise
+   * @param extendCategories - array of numbers representing the extension categories
+   * @param fromAddress - the sender address. Can be both an EOA or contract address
+   * @param targetAddress - the address of the implementation contract
+   * @param targetAbi - the abi of the implementation contract
+   * @param methodName - the name of the method to invoke
+   * @param params - OPTIONAL: the method parameters to be stored as an array
+   */
+  async submitMetaTransaction(
+    feeToken: string,
+    gasLimit: string,
+    gasPrice: string,
+    duration: string,
+    domainName: string,
+    useOraclePriceFeed: boolean,
+    extendCategories: Array<number>,
+    fromAddress: string,
+    targetAddress: string,
+    targetAbi: ContractInterface,
+    methodName: string,
+    params: Array<any> = []
+  ) {
+    const conveyorIsEnabled = await this.fetchConveyorStatus(targetAddress);
+    if (!conveyorIsEnabled) {
+      return this.submitTransaction(
+        targetAddress,
+        targetAbi,
+        methodName,
+        params
+      );
+    }
+    const implementation = new Contract(
+      targetAddress,
+      targetAbi,
+      this.provider
+    );
+    const forwarder = new Contract(
+      forwarderAddress,
+      forwarderAbi,
+      this.provider
+    );
+    const encodedFunction = implementation.interface.encodeFunctionData(
+      methodName,
+      params
+    );
+    const chainId = await this.provider.network.chainId;
+    const signer = await this.provider.getSigner();
+    const signerAddress = await signer.getAddress();
+    const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
+    const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
+    const feeDecimal = await feeErc20.decimals();
+    const maxTokenAmount =
+      feeToken === zeroAddress
+        ? BigNumber.from(0)
+        : await getFeePrice(chainId, feeToken, feeDecimal, txnFee);
+    const nonce = await forwarder.nonces(signerAddress);
+    const now = Math.floor(Date.now() / 1000);
+    const deadline = BigNumber.from(now).add(BigNumber.from(duration));
+    const hexCategories = extendCategories.map(category => {
+      return BigNumber.from(category).toHexString();
+    });
+    const message: MetaTxn = {
+      from: fromAddress,
+      to: targetAddress,
+      feeToken: feeToken,
+      useOraclePriceFeed: useOraclePriceFeed,
+      maxTokenAmount: maxTokenAmount.toHexString(),
+      deadline: deadline.toHexString(),
+      nonce: nonce.toHexString(),
+      data: encodedFunction,
+      extendCategories: hexCategories,
+    };
+    const { sig, msg } = await _buildForwarderEIP712(
+      this.provider,
+      chainId,
+      forwarderAddress,
+      domainName,
+      message,
+      signerAddress
+    );
+    const senderIsContract = await _addressIsContract(
+      this.provider,
+      fromAddress
+    );
+    const signerType = senderIsContract ? 'CONTRACT' : 'EOA';
+    const reqParam = [signerType, msg, sig];
+    const reqOptions = _buildRequest(`/v3/metaTx/executeV2`, reqParam);
     console.log('sending request...');
     console.log(reqOptions);
     const jsonResponse = await fetch(relayerConfig, reqOptions);
@@ -255,6 +355,14 @@ export default class Conveyor {
 
 // helper functions
 
+async function _addressIsContract(
+  provider: JsonRpcProvider,
+  address: string
+): Promise<boolean> {
+  const code = await provider.getCode(address);
+  return code.length > 2;
+}
+
 async function _buildForwarderEIP712(
   provider: JsonRpcProvider,
   chainId: number,
@@ -274,12 +382,14 @@ async function _buildForwarderEIP712(
     message: content,
   };
   const data = JSON.stringify(eip712Msg);
-  const signature: Signature = await provider.send('eth_signTypedData_v4', [
+  const signature: SignatureLike = await provider.send('eth_signTypedData_v4', [
     signerAddress,
     data,
   ]);
-  _verifySignature(domain, content, signature, signerAddress);
-  return { sig: splitSignature(signature), msg: eip712Msg };
+  if (content.from === signerAddress) {
+    _verifySignature(domain, content, signature, signerAddress);
+  }
+  return { sig: signature, msg: eip712Msg };
 }
 
 function _buildRequest(method: string, params: Array<any>) {
@@ -302,7 +412,7 @@ function _buildRequest(method: string, params: Array<any>) {
 function _verifySignature(
   domain: Domain,
   message: MetaTxn,
-  signature: Signature,
+  signature: SignatureLike,
   signerAddress: string
 ): void {
   const recovered = verifyTypedData(
