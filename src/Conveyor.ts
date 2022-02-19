@@ -20,6 +20,12 @@ const { splitSignature, verifyTypedData } = utils;
 
 const zeroAddress = constants.AddressZero;
 
+interface ConstructorOptions {
+  forwarder?: string;
+  relayerConfig?: string;
+  env?: ENVIRONMENT;
+}
+
 export default class Conveyor {
   forwarderAddress: string;
 
@@ -27,16 +33,13 @@ export default class Conveyor {
 
   provider: JsonRpcProvider;
 
-  constructor(
-    _provider: JsonRpcProvider,
-    _forwarder?: string,
-    _relayerConfig?: string,
-    _env = ENVIRONMENT.PRODUCTION
-  ) {
+  constructor(_provider: JsonRpcProvider, _options?: ConstructorOptions) {
     this.provider = _provider;
     this.forwarderAddress =
-      _forwarder || FORWARDER_ADDRESS[_provider.network.chainId];
-    this.relayerConfig = _relayerConfig || RELAYER_ENDPOINT_URL(_env);
+      _options?.forwarder || FORWARDER_ADDRESS[_provider.network.chainId];
+    this.relayerConfig =
+      _options?.relayerConfig ||
+      RELAYER_ENDPOINT_URL(ENVIRONMENT.PRODUCTION || _options?.env);
   }
 
   /**
