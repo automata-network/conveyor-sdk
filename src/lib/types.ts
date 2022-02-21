@@ -1,3 +1,5 @@
+import * as eip712 from './eip712';
+
 export interface Response {
   id: number;
   jsonrpc: string;
@@ -25,6 +27,16 @@ export interface Domain {
   version: string;
   chainId: string;
   verifyingContract: string;
+}
+
+export interface EIP712Type {
+  types: {
+    EIP712Domain: typeof eip712.DOMAIN_TYPE;
+    Forwarder: typeof eip712.FORWARDER_TYPE;
+  };
+  domain: Domain;
+  primaryType: string;
+  message: MetaTxn;
 }
 
 export type AddressMap = { [chainId: number]: string };

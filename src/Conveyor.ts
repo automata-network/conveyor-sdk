@@ -11,7 +11,7 @@ import { RELAYER_ENDPOINT_URL, FORWARDER_ADDRESS } from './lib/constants';
 import getFeePrice from './lib/fee';
 import * as eip712 from './lib/eip712';
 import { verifyMetaTxnResponse, verifyFee } from './lib/eventListener';
-import { MetaTxn, Response, Domain } from './lib/types';
+import { MetaTxn, Response, Domain, EIP712Type } from './lib/types';
 import { abi as erc20Abi } from './abi/IERC20Permit.json';
 import { abi as baseAbi } from './abi/ConveyorBase.json';
 import { abi as forwarderAbi } from './abi/ConveyorForwarder.json';
@@ -24,6 +24,12 @@ interface ConstructorOptions {
   forwarder?: string;
   relayerConfig?: string;
   env?: ENVIRONMENT;
+}
+
+interface RequestParamType {
+  signerType: string;
+  msg: EIP712Type;
+  sig: SignatureLike;
 }
 
 export default class Conveyor {
@@ -304,7 +310,11 @@ export default class Conveyor {
       fromAddress
     );
     const signerType = senderIsContract ? 'CONTRACT' : 'EOA';
-    const reqParam = [signerType, msg, sig];
+    const reqParam: RequestParamType = {
+      signerType: signerType,
+      msg: msg,
+      sig: sig,
+    };
     const reqOptions = _buildRequest(`/v3/metaTx/executeV2`, reqParam);
     console.log('sending request...');
     console.log(reqOptions);
@@ -382,7 +392,7 @@ async function _buildForwarderEIP712(
   signerAddress: string
 ) {
   const domain = await eip712.getDomain(forwarderAddress, chainId, domainName);
-  const eip712Msg = {
+  const eip712Msg: EIP712Type = {
     types: {
       EIP712Domain: eip712.DOMAIN_TYPE,
       Forwarder: eip712.FORWARDER_TYPE,
@@ -402,7 +412,7 @@ async function _buildForwarderEIP712(
   return { sig: signature, msg: eip712Msg };
 }
 
-function _buildRequest(method: string, params: Array<any>) {
+function _buildRequest(method: string, params: Array<any> | RequestParamType) {
   const jsonrpcRequest = {
     jsonrpc: '2.0',
     method: method,
