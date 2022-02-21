@@ -63,10 +63,18 @@ const conveyor = new Conveyor(web3, options);
 
 As mentioned previously, submitting a transaction using Conveyor only requires three steps.
 
+**Prerequisite**
+
+Install the SDK by running:
+
+```bash
+yarn add @automata-network/conveyor-sdk
+```
+
 **Step 1: Instantiate the module and set your Web3 provider**
 
 ```javascript
-import { Conveyor } from '@conveyor/sdk';
+import { Conveyor } from '@automata-network/conveyor-sdk';
 
 const web3 = window.ethereum; // Metamask
 
