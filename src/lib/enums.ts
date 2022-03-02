@@ -27,3 +27,8 @@ export enum ChainId {
   PALM_TESTNET = 11297108099,
   MOONRIVER = 1285,
 }
+
+export enum ENVIRONMENT {
+  TEST,
+  PRODUCTION,
+}

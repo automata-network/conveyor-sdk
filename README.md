@@ -33,7 +33,7 @@ Implementation smart contracts must inherit the `ConveyorBase` contract. The `Co
 The main module has the following functions built-in:
 
 - `erc20ApproveForwarder`- Sets an allowance for the Forwarder contract to transfer ERC20 tokens for fee payment.
-- `submitConveyorTransaction` - Constructs the request body to the Geode relayer to interact with contracts that are protected by Conveyor.
+- `submitMetaTransaction` - Constructs the request body to the Geode relayer to interact with contracts that are protected by Conveyor. (Note: The `submitConveyorTransaction()` method has been deprecated, it will be removed in future releases)
 - `submitTransaction` - Submits a regular transaction directly to the target address. This can be used to execute methods that do not have the `onlyConveyor` modifier or to contracts that have disabled Conveyor protection.
 - `fetchConveyorStatus` - detects whether Conveyor protection is enabled for the given target contract.
 - `toggleConveyorProtection` - enables/disables Conveyor protection on the given target contract.
@@ -46,33 +46,39 @@ https://github.com/automata-network/conveyor-sdk
 
 # Configurable Variables
 
-The canonical `RELAYER_ENDPOINT_URL` and `FORWARDER_ADDRESS` are provided in the SDK. This is because most projects are likely using the same relayer and Forwarder contract. If your project were to fall in an exceptional circumstance which a dedicated relayer and forwarder are provided, you may simply overwrite those variables, by passing the following environmental variables
-
-```
-FORWARDER
-RELAYER
-```
-
-In JavaScript, it would look something like this:
+The default `RELAYER_ENDPOINT_URL` and `FORWARDER_ADDRESS` are [included](./src/lib//constants.ts) in the SDK. This is because most projects are likely using the same relayer and Forwarder contract. If your projects were assigned to a dedicated relayer and/or forwarder, you may simply overwrite those variables, by passing the following object as a parameter to initialize the Conveyor module.
 
 ```javascript
-process.env.RELAYER = <url>
-process.env.FORWARDER = 0x<forwarder_address>
-```
+// This is optional and overwrites the canon relayer and forwarder
+const options = {
+  forwarder: '0x84194C00E190dE7A10180853f6a28502Ad1A1029',
+  relayerConfig: 'https://fake-relayer.com',
+  env: ENVIRONMENT.TEST,
+};
 
----
+const conveyor = new Conveyor(web3, options);
+```
 
 # Quick Guide
 
 As mentioned previously, submitting a transaction using Conveyor only requires three steps.
 
+**Prerequisite**
+
+Install the SDK by running:
+
+```bash
+yarn add @automata-network/conveyor-sdk
+```
+
 **Step 1: Instantiate the module and set your Web3 provider**
 
 ```javascript
-import { Conveyor } from '@conveyor/sdk';
+import { Conveyor } from '@automata-network/conveyor-sdk';
 
 const web3 = window.ethereum; // Metamask
-const conveyor = new Conveyor(web3);
+
+const conveyor = new Conveyor(web3); // assigns default relayer and forwarder depending on chain id and the environment
 ```
 
 **Step 2: Approve the Forwarder contract for collecting fees**
@@ -90,7 +96,7 @@ In the above example, the user is allocating 100 USDC of allowance to the Forwar
 
 **Step 3: Submit the transaction**
 
-The `submitConveyorTransaction()` function requires the following parameters:
+The `submitMetaTransaction()` function requires the following parameters:
 
 | Params               | Type          | Description                                                                                                                                                                                                                                                                                               |
 | -------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -101,6 +107,7 @@ The `submitConveyorTransaction()` function requires the following parameters:
 | `domainName`         | string        | **REQUIRED:** The EIP712 domain name                                                                                                                                                                                                                                                                      |
 | `useOraclePriceFeed` | boolean       | **REQUIRED:** True: use an oracle price feed as a source to fetch fee token price, false: otherwise                                                                                                                                                                                                       |
 | `extendCategories`   | Array<number> | **REQUIRED:** An array of numeric categories that maps to the request extension type. Pass the `[0]` value to omit extensions. To request an N-amount of extensions, provide an array of N-size with their corresponding categories. For example, to request x2 randomly generated numbers, input `[1,1]` |
+| `fromAddress`        | string        | **REQUIRED:** This can be an EOA address or a smart contract address to support EIP 1271 Signature Verification. If an EOA address is provided, it must match the signing address, otherwise the transaction will fail.                                                                                   |
 | `targetAddress`      | string        | **REQUIRED:** The address of the implementation contract                                                                                                                                                                                                                                                  |
 | `targetAbi`          | string        | **REQUIRED:** The abi of the implementation contract                                                                                                                                                                                                                                                      |
 | `methodName`         | string        | **REQUIRED:** The name of the method to invoke                                                                                                                                                                                                                                                            |
