@@ -172,15 +172,11 @@ export default class Conveyor {
       feeToken !== zeroAddress
         ? new Contract(feeToken, erc20Abi, this.provider)
         : undefined;
+    const feeDecimal = feeErc20 ? await feeErc20.decimals() : undefined;
     const maxTokenAmount =
-      feeToken === zeroAddress
-        ? BigNumber.from(0)
-        : await getFeePrice(
-            chainId,
-            feeToken,
-            await feeErc20!.decimals(),
-            txnFee
-          );
+      feeToken !== zeroAddress && feeDecimal != null
+        ? await getFeePrice(chainId, feeToken, feeDecimal, txnFee)
+        : BigNumber.from(0);
     const nonce = await forwarder.nonces(signerAddress);
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigNumber.from(now).add(BigNumber.from(duration));
@@ -285,15 +281,11 @@ export default class Conveyor {
       feeToken !== zeroAddress
         ? new Contract(feeToken, erc20Abi, this.provider)
         : undefined;
+    const feeDecimal = feeErc20 ? await feeErc20.decimals() : undefined;
     const maxTokenAmount =
-      feeToken === zeroAddress
-        ? BigNumber.from(0)
-        : await getFeePrice(
-            chainId,
-            feeToken,
-            await feeErc20!.decimals(),
-            txnFee
-          );
+      feeToken !== zeroAddress && feeDecimal != null
+        ? await getFeePrice(chainId, feeToken, feeDecimal, txnFee)
+        : BigNumber.from(0);
     const nonce = await forwarder.nonces(signerAddress);
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigNumber.from(now).add(BigNumber.from(duration));
