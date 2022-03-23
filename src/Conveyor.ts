@@ -168,12 +168,19 @@ export default class Conveyor {
     const signer = await this.provider.getSigner();
     const signerAddress = await signer.getAddress();
     const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
-    const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
-    const feeDecimal = await feeErc20.decimals();
+    const feeErc20 =
+      feeToken !== zeroAddress
+        ? new Contract(feeToken, erc20Abi, this.provider)
+        : undefined;
     const maxTokenAmount =
       feeToken === zeroAddress
         ? BigNumber.from(0)
-        : await getFeePrice(chainId, feeToken, feeDecimal, txnFee);
+        : await getFeePrice(
+            chainId,
+            feeToken,
+            await feeErc20!.decimals(),
+            txnFee
+          );
     const nonce = await forwarder.nonces(signerAddress);
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigNumber.from(now).add(BigNumber.from(duration));
@@ -274,12 +281,19 @@ export default class Conveyor {
     const signer = await this.provider.getSigner();
     const signerAddress = await signer.getAddress();
     const txnFee = BigNumber.from(gasLimit).mul(BigNumber.from(gasPrice));
-    const feeErc20 = new Contract(feeToken, erc20Abi, this.provider);
-    const feeDecimal = await feeErc20.decimals();
+    const feeErc20 =
+      feeToken !== zeroAddress
+        ? new Contract(feeToken, erc20Abi, this.provider)
+        : undefined;
     const maxTokenAmount =
       feeToken === zeroAddress
         ? BigNumber.from(0)
-        : await getFeePrice(chainId, feeToken, feeDecimal, txnFee);
+        : await getFeePrice(
+            chainId,
+            feeToken,
+            await feeErc20!.decimals(),
+            txnFee
+          );
     const nonce = await forwarder.nonces(signerAddress);
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigNumber.from(now).add(BigNumber.from(duration));
