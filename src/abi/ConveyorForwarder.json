@@ -5,6 +5,19 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "bool[]",
+          "name": "successArr",
+          "type": "bool[]"
+        }
+      ],
+      "name": "BatchedMetaStatus",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
           "internalType": "address",
           "name": "sender",
           "type": "address"
@@ -101,6 +114,114 @@
         {
           "components": [
             {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "feeToken",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "useOraclePriceFeed",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxTokenAmount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "deadline",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "nonce",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "data",
+                  "type": "bytes"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "extendCategories",
+                  "type": "uint256[]"
+                }
+              ],
+              "internalType": "struct ConveyorTypes.MetaTransaction",
+              "name": "metatx",
+              "type": "tuple"
+            },
+            {
+              "internalType": "string",
+              "name": "domainName",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "relayerChargeEnabled",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenPricePerNativeToken",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum SignatureValidator.SignatureSignerType",
+              "name": "signerType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "sig",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes",
+              "name": "extendParamData",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct ConveyorForwarder.ConveyorTransaction[]",
+          "name": "conveyorTransactions",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "executeBatchedMetaTx",
+      "outputs": [
+        {
+          "internalType": "bool[]",
+          "name": "",
+          "type": "bool[]"
+        },
+        {
+          "internalType": "bytes[]",
+          "name": "",
+          "type": "bytes[]"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
               "internalType": "address",
               "name": "from",
               "type": "address"
@@ -166,26 +287,14 @@
           "type": "uint256"
         },
         {
-          "components": [
-            {
-              "internalType": "uint8",
-              "name": "v",
-              "type": "uint8"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "r",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "s",
-              "type": "bytes32"
-            }
-          ],
-          "internalType": "struct ConveyorTypes.Sig",
+          "internalType": "enum SignatureValidator.SignatureSignerType",
+          "name": "signerType",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes",
           "name": "sig",
-          "type": "tuple"
+          "type": "bytes"
         },
         {
           "internalType": "bytes",
@@ -193,7 +302,7 @@
           "type": "bytes"
         }
       ],
-      "name": "executeMetaTx",
+      "name": "executeMetaTxV2",
       "outputs": [
         {
           "internalType": "bool",
