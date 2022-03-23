@@ -15,6 +15,25 @@ export const PRICE_API_PREFIX: { [chainId in ChainId]?: string } = {
     'https://api.coingecko.com/api/v3/simple/token_price/moonriver?',
 };
 
+const TESTNET = [
+  ChainId.RINKEBY,
+  ChainId.ROPSTEN,
+  ChainId.GÖRLI,
+  ChainId.KOVAN,
+  ChainId.ARBITRUM_TESTNET,
+  ChainId.AVALANCHE_TESTNET,
+  ChainId.HARMONY_TESTNET,
+  ChainId.OKEX_TESTNET,
+  ChainId.BSC_TESTNET,
+  ChainId.PALM_TESTNET,
+  ChainId.MOONBEAM_TESTNET,
+  ChainId.FANTOM_TESTNET,
+  ChainId.MATIC_TESTNET,
+  ChainId.HECO_TESTNET,
+];
+
+const isTestNet = (chainId: ChainId): boolean => TESTNET.includes(chainId);
+
 /**
  * This function converts a transaction fee to the equivalent value of the provided payment token
  * @param chainId the chainID of the network
@@ -33,6 +52,9 @@ async function calculateFee(
   nativeToken: string,
   nativeTokenDecimals = 18
 ): Promise<BigNumber> {
+  if (isTestNet(chainId)) {
+    return BigNumber.from(0);
+  }
   const priceApiPrefix = PRICE_API_PREFIX[chainId];
   if (!priceApiPrefix) {
     throw new Error(
