@@ -1,0 +1,1 @@
+This change includes the automation workflow to publish build to the NPM registry.
