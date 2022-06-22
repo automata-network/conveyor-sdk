@@ -117,7 +117,7 @@ The `submitTransaction()` method can be invoked to execute functions that do not
 
 This section describes the category index that are passed into the `extendCategories` parameter to get external data that can be useful for your target contracts.
 
-| Category | Description                                                                |
-| -------- | -------------------------------------------------------------------------- |
-| 0        | No extension                                                               |
-| 1        | [VRF Generated Random Number](https://docs.chain.link/docs/chainlink-vrf/) |
+| Category | Description                 |
+| -------- | --------------------------- |
+| 0        | No extension                |
+| 1        | VRF Generated Random Number |
