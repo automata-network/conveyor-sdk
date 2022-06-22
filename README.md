@@ -25,8 +25,8 @@ Implementation smart contracts must inherit the `ConveyorBase` contract. The `Co
 
 ### Source Code:
 
-- `ConveyorBase`: https://github.com/automata-network/generic-conveyor/blob/unit-testing/contracts/ConveyorBase.sol
-- Example Contract: https://github.com/automata-network/generic-conveyor/blob/unit-testing/contracts/test/Greeter.sol
+- `ConveyorBase`: https://github.com/automata-network/generic-conveyor/blob/main/contracts/ConveyorBase.sol
+- Example Contract: https://github.com/automata-network/generic-conveyor/blob/main/contracts/test/Greeter.sol
 
 ## SDK
 
@@ -37,10 +37,6 @@ The main module has the following functions built-in:
 - `submitTransaction` - Submits a regular transaction directly to the target address. This can be used to execute methods that do not have the `onlyConveyor` modifier or to contracts that have disabled Conveyor protection.
 - `fetchConveyorStatus` - detects whether Conveyor protection is enabled for the given target contract.
 - `toggleConveyorProtection` - enables/disables Conveyor protection on the given target contract.
-
-### Source Code
-
-https://github.com/automata-network/conveyor-sdk
 
 ---
 
