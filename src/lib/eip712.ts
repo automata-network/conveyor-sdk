@@ -28,7 +28,7 @@ export function getDomain(
   return {
     name: domain_name,
     version: '1',
-    chainId: chain_id.toString(16),
+    chainId: '0x' + chain_id.toString(16),
     verifyingContract: contractAddress,
   };
 }
