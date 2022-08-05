@@ -1,1 +1,1 @@
-This change includes the automation workflow to publish build to the NPM registry.
+Hotfix changes on ChainID hex conversion. Hex string of odd length should not he zero padded.
