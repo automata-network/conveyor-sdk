@@ -28,7 +28,7 @@ export function getDomain(
   return {
     name: domain_name,
     version: '1',
-    chainId: BigNumber.from(chain_id).toHexString(),
+    chainId: chain_id.toString(16),
     verifyingContract: contractAddress,
   };
 }
