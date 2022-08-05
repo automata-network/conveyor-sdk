@@ -1,4 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import { Domain } from './types';
 
 export const DOMAIN_TYPE = [
